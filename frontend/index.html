@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreditScore AI — Risk Assessment</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary:    #070b14;
+            --bg-card:       #0d1628;
+            --bg-input:      #09111e;
+            --border:        #1a2d4a;
+            --border-focus:  #c9a84c;
+            --text:          #e2e8f5;
+            --text-sub:      #7a90b3;
+            --text-muted:    #3d5070;
+            --gold:          #c9a84c;
+            --gold-light:    #e8c97a;
+            --success:       #10b981;
+            --danger:        #ef4444;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            padding: 2.5rem 1rem 4rem;
+        }
+
+        .container { max-width: 920px; margin: 0 auto; }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            margin-bottom: 2.75rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .header-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+        .logo-box {
+            width: 44px; height: 44px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 10px;
+            display: grid; place-items: center;
+            font-size: 1.4rem;
+        }
+        .header h1 { font-size: 1.7rem; font-weight: 700; letter-spacing: -0.02em; }
+        .header h1 span { color: var(--gold); }
+        .header p { color: var(--text-sub); font-size: 0.9rem; margin-top: 0.4rem; }
+
+        /* ── Section card ── */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem 2rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--gold) 0%, transparent 60%);
+        }
+
+        .card-header {
+            display: flex; align-items: center; gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .card-icon {
+            width: 34px; height: 34px;
+            background: rgba(201,168,76,.08);
+            border: 1px solid rgba(201,168,76,.25);
+            border-radius: 8px;
+            display: grid; place-items: center;
+            font-size: 1rem;
+        }
+        .card-header h2 { font-size: 1rem; font-weight: 600; }
+        .card-header p  { font-size: 0.75rem; color: var(--text-muted); margin-top: 1px; }
+
+        /* ── Grid ── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.1rem; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.1rem; }
+        .span-2 { grid-column: span 2; }
+
+        /* ── Form fields ── */
+        .field { display: flex; flex-direction: column; gap: 0.45rem; }
+
+        .field label {
+            font-size: 0.72rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-sub);
+        }
+        .field label .opt {
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-left: 0.3rem;
+        }
+        .field label .rng {
+            font-size: 0.67rem;
+            background: rgba(255,255,255,.03);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.05rem 0.4rem;
+            margin-left: 0.35rem;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        .field input,
+        .field select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.88rem;
+            padding: 0.6rem 0.85rem;
+            outline: none;
+            width: 100%;
+            transition: border-color .18s, box-shadow .18s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%237a90b3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.7rem center;
+            background-size: 0.95rem;
+            padding-right: 2.25rem;
+            cursor: pointer;
+        }
+        .field input:focus,
+        .field select:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(201,168,76,.1);
+        }
+        .field input::placeholder { color: var(--text-muted); }
+
+        /* ── Submit ── */
+        .submit-wrap { display: flex; justify-content: center; margin-top: 2rem; }
+        .btn {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--bg-primary);
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            padding: 0.85rem 3.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            min-width: 230px;
+            transition: opacity .2s, transform .1s;
+        }
+        .btn:hover  { opacity: 0.88; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* ── Error ── */
+        .error-box {
+            display: none;
+            background: rgba(239,68,68,.08);
+            border: 1px solid rgba(239,68,68,.3);
+            color: #fca5a5;
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            font-size: 0.82rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .error-box.show { display: block; }
+
+        /* ── Result card ── */
+        .result {
+            display: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 2.5rem 2rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            animation: fadeUp .35s ease;
+        }
+        .result.show    { display: block; }
+        .result.ok      { border-color: var(--success); box-shadow: 0 0 28px rgba(16,185,129,.09); }
+        .result.fail    { border-color: var(--danger);  box-shadow: 0 0 28px rgba(239,68,68,.09); }
+
+        .result-icon {
+            width: 68px; height: 68px;
+            border-radius: 50%;
+            display: grid; place-items: center;
+            font-size: 1.9rem;
+            margin: 0 auto 1.25rem;
+        }
+        .ok   .result-icon { background: rgba(16,185,129,.1);  border: 2px solid var(--success); }
+        .fail .result-icon { background: rgba(239,68,68,.1);   border: 2px solid var(--danger); }
+
+        .result-title { font-size: 1.45rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .ok   .result-title { color: var(--success); }
+        .fail .result-title { color: var(--danger); }
+
+        .result-sub { font-size: 0.85rem; color: var(--text-sub); margin-bottom: 1.4rem; }
+
+        .prob-track {
+            background: rgba(255,255,255,.05);
+            border-radius: 100px;
+            height: 7px;
+            max-width: 280px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        .prob-fill {
+            height: 100%;
+            border-radius: 100px;
+            width: 0%;
+            transition: width .9s ease;
+        }
+        .ok   .prob-fill { background: linear-gradient(90deg, #10b981, #34d399); }
+        .fail .prob-fill { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+        .result-client {
+            margin-top: 1.4rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* ── Spinner ── */
+        .spin {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(7,11,20,.25);
+            border-top-color: var(--bg-primary);
+            border-radius: 50%;
+            animation: rotate .65s linear infinite;
+            vertical-align: middle;
+            margin-right: 0.45rem;
+        }
+
+        @keyframes rotate { to { transform: rotate(360deg); } }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 620px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .span-2 { grid-column: span 1; }
+            .card { padding: 1.25rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-logo">
+            <div class="logo-box">◈</div>
+            <h1>Credit<span>Score</span> AI</h1>
+        </div>
+        <p>Intelligent credit risk assessment powered by machine learning</p>
+    </header>
+
+    <form id="form">
+
+        <!-- 1. Client Information -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">👤</div>
+                <div>
+                    <h2>Client Information</h2>
+                    <p>Personal identification — all fields optional</p>
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="field">
+                    <label>Full Name <span class="opt">(optional)</span></label>
+                    <input type="text" name="name" placeholder="John Doe">
+                </div>
+                <div class="field">
+                    <label>Email <span class="opt">(optional)</span></label>
+                    <input type="email" name="email" placeholder="john@example.com">
+                </div>
+                <div class="field">
+                    <label>Phone <span class="opt">(optional)</span></label>
+                    <input type="tel" name="phoneNum" placeholder="+1 555 000 0000">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Loan Details -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">💳</div>
+                <div>
+                    <h2>Loan Details</h2>
+                    <p>Amount, terms, and purpose of the loan</p>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label>Loan Amount (USD) <span class="rng">1,000 – 40,000</span></label>
+                    <input type="number" name="loan_amnt" placeholder="15000"
+                           min="1000" max="40000" step="100" required>
+                </div>
+                <div class="field">
+                    <label>Term</label>
+                    <select name="term" required>
+                        <option value="" disabled selected>Select term</option>
+                        <option value="36">36 months</option>
+                        <option value="60">60 months</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Interest Rate (%) <span class="rng">5.31 – 30.99</span></label>
+                    <input type="number" name="int_rate" placeholder="12.50"
+                           min="5.31" max="30.99" step="0.01" required>
+                </div>
+                <div class="field">
+                    <label>Monthly Installment (USD) <span class="rng">14.01 – 1,607.80</span></label>
+                    <input type="number" name="installment" placeholder="450.00"
+                           min="14.01" max="1607.80" step="0.01" required>
+                </div>
+                <div class="field">
+                    <label>Purpose</label>
+                    <select name="purpose" required>
+                        <option value="" disabled selected>Select purpose</option>
+                        <option value="debt_consolidation">Debt Consolidation</option>
+                        <option value="credit_card">Credit Card</option>
+                        <option value="home_improvement">Home Improvement</option>
+                        <option value="major_purchase">Major Purchase</option>
+                        <option value="small_business">Small Business</option>
+                        <option value="medical">Medical</option>
+                        <option value="car">Car</option>
+                        <option value="vacation">Vacation</option>
+                        <option value="moving">Moving</option>
+                        <option value="house">House</option>
+                        <option value="wedding">Wedding</option>
+                        <option value="educational">Educational</option>
+                        <option value="renewable_energy">Renewable Energy</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Sub Grade</label>
+                    <select name="subgrade" required>
+                        <option value="" disabled selected>Select sub grade</option>
+                        <optgroup label="Grade A">
+                            <option>A1</option><option>A2</option><option>A3</option>
+                            <option>A4</option><option>A5</option>
+                        </optgroup>
+                        <optgroup label="Grade B">
+                            <option>B1</option><option>B2</option><option>B3</option>
+                            <option>B4</option><option>B5</option>
+                        </optgroup>
+                        <optgroup label="Grade C">
+                            <option>C1</option><option>C2</option><option>C3</option>
+                            <option>C4</option><option>C5</option>
+                        </optgroup>
+                        <optgroup label="Grade D">
+                            <option>D1</option><option>D2</option><option>D3</option>
+                            <option>D4</option><option>D5</option>
+                        </optgroup>
+                        <optgroup label="Grade E">
+                            <option>E1</option><option>E2</option><option>E3</option>
+                            <option>E4</option><option>E5</option>
+                        </optgroup>
+                        <optgroup label="Grade F">
+                            <option>F1</option><option>F2</option><option>F3</option>
+                            <option>F4</option><option>F5</option>
+                        </optgroup>
+                        <optgroup label="Grade G">
+                            <option>G1</option><option>G2</option><option>G3</option>
+                            <option>G4</option><option>G5</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Borrower Profile -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">🏦</div>
+                <div>
+                    <h2>Borrower Profile</h2>
+                    <p>Employment, income, and verification details</p>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="field">
+                    <label>Employment Length</label>
+                    <select name="emp_length" required>
+                        <option value="" disabled selected>Select employment length</option>
+                        <option value="0">&lt; 1 year</option>
+                        <option value="1">1 year</option>
+                        <option value="2">2 years</option>
+                        <option value="3">3 years</option>
+                        <option value="4">4 years</option>
+                        <option value="5">5 years</option>
+                        <option value="6">6 years</option>
+                        <option value="7">7 years</option>
+                        <option value="8">8 years</option>
+                        <option value="9">9 years</option>
+                        <option value="10">10+ years</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Home Ownership</label>
+                    <select name="home_ownership" required>
+                        <option value="" disabled selected>Select ownership</option>
+                        <option value="OWN">Own</option>
+                        <option value="RENT">Rent</option>
+                        <option value="MORTGAGE">Mortgage</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Annual Income (USD) <span class="rng">0 – 9,500,000</span></label>
+                    <input type="number" name="annual_inc" placeholder="65000"
+                           min="0" max="9500000" step="500" required>
+                </div>
+                <div class="field">
+                    <label>Verification Status</label>
+                    <select name="verification_status" required>
+                        <option value="" disabled selected>Select status</option>
+                        <option value="Not Verified">Not Verified</option>
+                        <option value="Source Verified">Source Verified</option>
+                        <option value="Verified">Verified</option>
+                    </select>
+                </div>
+                <div class="field span-2">
+                    <label>Debt-to-Income Ratio (DTI) <span class="rng">0 – 999</span></label>
+                    <input type="number" name="dti" placeholder="18.50"
+                           min="0" max="999" step="0.01" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Credit History -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📊</div>
+                <div>
+                    <h2>Credit History</h2>
+                    <p>Account history and credit utilization data</p>
+                </div>
+            </div>
+            <div class="grid-3">
+                <div class="field">
+                    <label>Open Accounts <span class="rng">0 – 90</span></label>
+                    <input type="number" name="open_acc" placeholder="10"
+                           min="0" max="90" step="1" required>
+                </div>
+                <div class="field">
+                    <label>Public Records <span class="rng">0 – 86</span></label>
+                    <input type="number" name="pub_rec" placeholder="0"
+                           min="0" max="86" step="1" required>
+                </div>
+                <div class="field">
+                    <label>Revolving Balance (USD) <span class="rng">0 – 2,904,836</span></label>
+                    <input type="number" name="revol_bal" placeholder="12500"
+                           min="0" max="2904836" step="1" required>
+                </div>
+                <div class="field">
+                    <label>Revolving Utilization (%) <span class="rng">0 – 193</span></label>
+                    <input type="number" name="revol_util" placeholder="45.5"
+                           min="0" max="193" step="0.1" required>
+                </div>
+                <div class="field">
+                    <label>Total Accounts <span class="rng">2 – 169</span></label>
+                    <input type="number" name="total_acc" placeholder="25"
+                           min="2" max="169" step="1" required>
+                </div>
+                <div class="field">
+                    <label>Mortgage Accounts <span class="rng">0 – 52</span></label>
+                    <input type="number" name="mort_acc" placeholder="2"
+                           min="0" max="52" step="1" required>
+                </div>
+                <div class="field span-2">
+                    <label>Public Record Bankruptcies <span class="rng">0 – 11</span></label>
+                    <input type="number" name="pub_rec_bankruptcies" placeholder="0"
+                           min="0" max="11" step="1" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="submit-wrap">
+            <button type="submit" class="btn" id="submitBtn">Analyze Credit Risk</button>
+        </div>
+        <div class="error-box" id="errorBox"></div>
+
+    </form>
+
+    <!-- Result -->
+    <div class="result" id="result">
+        <div class="result-icon" id="rIcon"></div>
+        <div class="result-title" id="rTitle"></div>
+        <div class="result-sub"  id="rSub"></div>
+        <div class="prob-track">
+            <div class="prob-fill" id="rFill"></div>
+        </div>
+        <div class="result-client" id="rClient"></div>
+    </div>
+
+</div>
+
+<script>
+    const FLOAT_FIELDS = ['loan_amnt','int_rate','installment','annual_inc','dti','revol_bal','revol_util'];
+    const INT_FIELDS   = ['term','emp_length','open_acc','pub_rec','total_acc','mort_acc','pub_rec_bankruptcies'];
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const btn      = document.getElementById('submitBtn');
+        const errorBox = document.getElementById('errorBox');
+        const result   = document.getElementById('result');
+
+        result.classList.remove('show','ok','fail');
+        errorBox.classList.remove('show');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spin"></span>Analyzing…';
+
+        const fd      = new FormData(e.target);
+        const payload = {};
+        for (const [k, v] of fd.entries()) {
+            if (v === '')              payload[k] = null;
+            else if (FLOAT_FIELDS.includes(k)) payload[k] = parseFloat(v);
+            else if (INT_FIELDS.includes(k))   payload[k] = parseInt(v, 10);
+            else                               payload[k] = v;
+        }
+
+        try {
+            const res  = await fetch('/predict/', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload),
+            });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.detail || `Server error ${res.status}`);
+            }
+            render(await res.json());
+        } catch (err) {
+            errorBox.textContent = err.message;
+            errorBox.classList.add('show');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Analyze Credit Risk';
+        }
+    });
+
+    function render(data) {
+        const raw        = String(data.prediction).toLowerCase();
+        const isApproved = raw === '0';  // 0 = Fully Paid (approved), 1 = Charged Off (rejected)
+        const prob       = (data.probability * 100).toFixed(1);
+        const result     = document.getElementById('result');
+
+        result.className = 'result show ' + (isApproved ? 'ok' : 'fail');
+
+        document.getElementById('rIcon').textContent  = isApproved ? '✓' : '✗';
+        document.getElementById('rTitle').textContent = isApproved ? 'Loan Approved' : 'Loan Rejected';
+        document.getElementById('rSub').textContent   = `Model confidence: ${prob}%`;
+
+        const fill = document.getElementById('rFill');
+        fill.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = prob + '%'; }));
+
+        const c = data.cliente;
+        document.getElementById('rClient').textContent =
+            c && (c.name || c.email)
+                ? `Assessment for: ${[c.name, c.email].filter(Boolean).join(' · ')}`
+                : '';
+
+        result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+</script>
+</body>
+</html>
