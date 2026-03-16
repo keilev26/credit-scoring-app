@@ -1,6 +1,8 @@
-# Credit Scoring App
+# Credit Scoring App 🏦
 
 A full-stack machine learning application that predicts loan default risk. Given a borrower's financial profile, the model outputs a binary prediction (default / no default) along with a probability score.
+
+> 📓 **Google Colab Notebook:** [View the full ML experimentation here](https://colab.research.google.com/drive/1oKnkHgDUqf8-FFy9wd7WSSDROIIb7hId?usp=sharing)
 
 ---
 
@@ -10,7 +12,7 @@ Banks and lenders need to assess whether a borrower is likely to repay a loan. T
 
 ---
 
-## Results
+## Results ✅
 
 | Metric | Score |
 |--------|-------|
@@ -24,23 +26,38 @@ A ROC-AUC of 0.7346 is a strong result for credit scoring datasets, which are no
 
 | Layer | Technology |
 |-------|------------|
-| ML model | scikit-learn (binary classifier + StandardScaler) |
-| Data processing | pandas |
+| ML model | LightGBM + scikit-learn StandardScaler |
+| Data processing | pandas, numpy |
 | API | FastAPI (Python) |
 | Frontend | HTML, CSS, JavaScript |
+| Experimentation | Google Colab |
 | Model serving | pickle (.pkl) |
 
 ---
 
 ## Machine learning pipeline
 
-1. **Data analysis and preprocessing** — Applied pandas with analytical criteria to clean, explore, and engineer features from the raw dataset. This included handling missing values, encoding categorical variables (loan grade, home ownership, verification status, purpose), and scaling numeric features.
+### 1. Data analysis and preprocessing
+Applied pandas with analytical criteria to clean, explore, and engineer features from the **LendingClub dataset** (500,000 records, 2007–2018). This included handling missing values, encoding categorical variables (loan grade, home ownership, verification status, purpose), and scaling numeric features.
 
-2. **Feature engineering** — The model consumes 29 features. Categorical fields are one-hot encoded; the loan sub-grade (A1–G5) is mapped to an ordered numeric scale (1–35) to preserve its ordinal meaning.
+### 2. Feature engineering
+The final model consumes 29 features. Categorical fields are one-hot encoded; the loan sub-grade (A1–G5) is mapped to an ordered numeric scale (1–35) to preserve its ordinal meaning.
 
-3. **Model training** — Trained a binary classifier on the processed dataset and evaluated it with ROC-AUC, a metric well-suited for imbalanced classification.
+### 3. Model comparison 🔬
+Four models were trained and evaluated on the same train/test split. All used class imbalance handling strategies given the skewed target distribution (most borrowers repay):
 
-4. **Model serialization** — Both the fitted scaler and classifier are saved as `.pkl` files and loaded once at API startup.
+| Model | ROC-AUC | Notes |
+|-------|---------|-------|
+| Logistic Regression | 0.7284 | Baseline |
+| Logistic Regression (balanced weights) | 0.7286 | `class_weight="balanced"` |
+| Random Forest | 0.7309 | 200 trees, max depth 10 |
+| XGBoost | 0.7256 | `scale_pos_weight` for imbalance |
+| **LightGBM** ✅ | **0.7346** | **Selected — best ROC-AUC** |
+
+**LightGBM** was selected as the final model for its superior ROC-AUC and efficient handling of the imbalanced dataset (`is_unbalance=True`, 300 estimators, learning rate 0.05).
+
+### 4. Model serialization
+Both the fitted scaler and classifier are saved as `.pkl` files and loaded once at API startup.
 
 ---
 
